@@ -120,7 +120,7 @@
     ;; Expect rebuilds to be really quick (nothing changed)
     (expect (org-roam-db-build-cache)
             :to-equal
-            (list :files 0 :links 0 :titles 0 :refs 0 :deleted 0))))
+            (list :files 0 :links 0 :tags 0 :titles 0 :refs 0 :deleted 0))))
 
 (describe "org-roam-insert"
   (before-each
@@ -134,7 +134,7 @@
       (with-current-buffer buf
         (with-simulated-input
          "Foo RET"
-         (org-roam-insert nil))))
+         (org-roam-insert))))
     (expect (buffer-string) :to-match (regexp-quote "file:foo.org")))
 
   (it "temp2 -> nested/foo"
@@ -142,7 +142,7 @@
       (with-current-buffer buf
         (with-simulated-input
          "Nested SPC Foo RET"
-         (org-roam-insert nil))))
+         (org-roam-insert))))
     (expect (buffer-string) :to-match (regexp-quote "file:nested/foo.org")))
 
   (it "nested/temp3 -> foo"
@@ -150,7 +150,7 @@
       (with-current-buffer buf
         (with-simulated-input
          "Foo RET"
-         (org-roam-insert nil))))
+         (org-roam-insert))))
     (expect (buffer-string) :to-match (regexp-quote "file:../foo.org")))
 
   (it "a/b/temp4 -> nested/foo"
@@ -158,7 +158,7 @@
       (with-current-buffer buf
         (with-simulated-input
          "Nested SPC Foo RET"
-         (org-roam-insert nil))))
+         (org-roam-insert))))
     (expect (buffer-string) :to-match (regexp-quote "file:../../nested/foo.org"))))
 
 (describe "rename file updates cache"
