@@ -443,10 +443,12 @@ If DESCRIPTION is provided, use this as the link label. See
                            (if filter-fn
                                (funcall filter-fn it)
                              it)))
-         (title (org-roam-completion--completing-read "File: " completions
-                                                      :initial-input region-text))
+         (title-with-tags (org-roam-completion--completing-read "File: " completions
+                                                                :initial-input region-text))
+         (res (gethash title-with-tags completions))
+         (title (plist-get res :title))
+         (target-file-path (plist-get res :path))
          (description (or description region-text title))
-         (target-file-path (cdr (assoc title completions)))
          (link-description (org-roam--format-link-title (if lowercase
                                                             (downcase description)
                                                           description))))
@@ -458,8 +460,8 @@ If DESCRIPTION is provided, use this as the link label. See
           (insert (org-roam--format-link target-file-path link-description)))
       (when (org-roam-capture--in-process-p)
         (user-error "Nested Org-roam capture processes not supported"))
-      (let ((org-roam-capture--info (list (cons 'title title)
-                                          (cons 'slug (org-roam--title-to-slug title))))
+      (let ((org-roam-capture--info `((title . ,title-with-tags)
+                                      (slug . ,(org-roam--title-to-slug title-with-tags))))
             (org-roam-capture--context 'title))
         (add-hook 'org-capture-after-finalize-hook #'org-roam-capture--insert-link-h)
         (setq org-roam-capture-additional-template-props (list :region region
@@ -469,23 +471,26 @@ If DESCRIPTION is provided, use this as the link label. See
           (org-roam-capture--capture))))))
 
 (defun org-roam--get-title-path-completions ()
+  "Return a hash table for completion.
+The key is the displayed title for completion, and the value is a
+plist containing the path to the file, and the original title."
   "Return a list of cons pairs for titles to absolute path of Org-roam files."
   (let* ((rows (org-roam-db-query [:select [titles:file titles:titles tags:tags] :from titles
                                    :left :join tags
                                    :on (= titles:file tags:file)]))
-         res)
+         (ht (make-hash-table :test 'equal)))
     (dolist (row rows)
       (pcase-let ((`(,file-path ,titles ,tags) row))
-        (if titles
-            (dolist (title titles)
-              (push (cons (format "%s %s"
-                                  (if tags
-                                      (concat "(" (s-join ", " tags) ")")
-                                    "")
-                                  title) file-path) res))
-          (push (cons (org-roam--path-to-slug file-path)
-                      file-path) res))))
-    res))
+        (let ((titles (or titles (list (org-roam--path-to-slug file-path)))))
+          (dolist (title titles)
+            (let ((k (format "%s%s"
+                             (if tags
+                                 (concat "(" (s-join "," tags) ") ")
+                               "")
+                             title))
+                  (v (list :path file-path :title title)))
+              (puthash k v ht))))))
+    ht))
 
 (defun org-roam-find-file (&optional initial-prompt filter-fn)
   "Find and open an Org-roam file.
@@ -498,15 +503,17 @@ which takes as its argument an alist of path-completions.  See
                            (if filter-fn
                                (funcall filter-fn it)
                              it)))
-         (title (org-roam-completion--completing-read "File: " completions
-                                                      :initial-input initial-prompt))
-         (file-path (cdr (assoc title completions))))
+         (title-with-tags (org-roam-completion--completing-read "File: " completions
+                                                                :initial-input initial-prompt))
+         (res (gethash title-with-tags completions))
+         (title (plist-get res :title))
+         (file-path (plist-get res :path)))
     (if file-path
         (find-file file-path)
       (if (org-roam-capture--in-process-p)
           (user-error "Org-roam capture in process")
-        (let ((org-roam-capture--info `((title . ,title)
-                                       (slug . ,(org-roam--title-to-slug title))))
+        (let ((org-roam-capture--info `((title . ,title-with-tags)
+                                       (slug . ,(org-roam--title-to-slug title-with-tags))))
               (org-roam-capture--context 'title))
           (add-hook 'org-capture-after-finalize-hook #'org-roam-capture--find-file-h)
           (org-roam--with-template-error 'org-roam-capture-templates
