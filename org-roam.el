@@ -474,7 +474,6 @@ If DESCRIPTION is provided, use this as the link label. See
   "Return a hash table for completion.
 The key is the displayed title for completion, and the value is a
 plist containing the path to the file, and the original title."
-  "Return a list of cons pairs for titles to absolute path of Org-roam files."
   (let* ((rows (org-roam-db-query [:select [titles:file titles:titles tags:tags] :from titles
                                    :left :join tags
                                    :on (= titles:file tags:file)]))

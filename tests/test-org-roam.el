@@ -141,7 +141,7 @@
     (let ((buf (org-roam-test-find-new-file "temp2.org")))
       (with-current-buffer buf
         (with-simulated-input
-         "Nested SPC Foo RET"
+         "(nested) SPC Nested SPC Foo RET"
          (org-roam-insert))))
     (expect (buffer-string) :to-match (regexp-quote "file:nested/foo.org")))
 
@@ -157,7 +157,7 @@
     (let ((buf (org-roam-test-find-new-file "a/b/temp4.org")))
       (with-current-buffer buf
         (with-simulated-input
-         "Nested SPC Foo RET"
+         "(nested) SPC Nested SPC Foo RET"
          (org-roam-insert))))
     (expect (buffer-string) :to-match (regexp-quote "file:../../nested/foo.org"))))
 
