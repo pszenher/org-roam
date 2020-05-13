@@ -505,7 +505,6 @@ which takes as its argument an alist of path-completions.  See
          (title-with-tags (org-roam-completion--completing-read "File: " completions
                                                                 :initial-input initial-prompt))
          (res (gethash title-with-tags completions))
-         (title (plist-get res :title))
          (file-path (plist-get res :path)))
     (if file-path
         (find-file file-path)
