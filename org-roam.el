@@ -482,11 +482,11 @@ plist containing the path to the file, and the original title."
       (pcase-let ((`(,file-path ,titles ,tags) row))
         (let ((titles (or titles (list (org-roam--path-to-slug file-path)))))
           (dolist (title titles)
-            (let ((k (format "%s%s"
-                             (if tags
-                                 (concat "(" (s-join "," tags) ") ")
-                               "")
-                             title))
+            (let ((k (concat
+                      (if tags
+                          (concat "(" (s-join "," tags) ") ")
+                        "")
+                      title))
                   (v (list :path file-path :title title)))
               (puthash k v ht))))))
     ht))
